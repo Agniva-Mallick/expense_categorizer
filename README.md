@@ -18,7 +18,7 @@ Instead of relying on massive cloud APIs like OpenAI or Gemini, this project pro
   - **GQA** (Grouped Query Attention)
 - **Custom Tokenizer:** A bespoke Byte-Pair Encoding (BPE) tokenizer trained specifically on financial strings.
 - **Synthetic Data Pipeline:** Includes a procedural generator that creates 100,000+ realistic, messy bank transactions (e.g., `AMZN Mktp US*TO382` or conversational phrases like `i spend 100 on dental clinic`) across 8 financial categories.
-- **Lightning Fast:** Designed with a small context window (64 tokens) optimized for short transaction strings, allowing for rapid training on consumer GPUs (RTX 3050).
+- **Lightning Fast:** Designed with a small context window (64 tokens) optimized for short transaction strings, allowing for rapid training on consumer GPUs (RTX 30 series GPU).
 
 ## 🧠 How it Works
 
