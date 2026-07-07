@@ -12,7 +12,7 @@ class ModelConfig:
     n_kv_heads: int = 2
     d_ff: int = 688
     dropout: float = 0.1
-    norm_eps: float = 1e-6
+    norm_eps: float = 1e-06
     rope_theta: float = 10000.0
     tie_weights: bool = True
 
@@ -30,8 +30,8 @@ class TrainConfig:
     batch_size: int = 64
     gradient_accumulation_steps: int = 1
     max_steps: int = 5000
-    learning_rate: float = 5e-4
-    min_lr: float = 5e-5
+    learning_rate: float = 0.0005
+    min_lr: float = 5e-05
     weight_decay: float = 0.1
     beta1: float = 0.9
     beta2: float = 0.95
@@ -62,24 +62,11 @@ class TokenizerConfig:
     save_dir: str = 'tokenizer_vocab'
 
 def get_config(preset: str='default'):
-    presets = {
-        'tiny': {
-            'model': ModelConfig(vocab_size=256, max_seq_len=64, n_layers=2, d_model=128, n_heads=4, n_kv_heads=2, d_ff=344),
-            'train': TrainConfig(batch_size=16, max_steps=500, eval_every=50, save_every=100, warmup_steps=50)
-        },
-        'default': {
-            'model': ModelConfig(),
-            'train': TrainConfig()
-        },
-        'medium': {
-            'model': ModelConfig(vocab_size=2048, max_seq_len=64, n_layers=8, d_model=512, n_heads=8, n_kv_heads=4, d_ff=1376),
-            'train': TrainConfig(batch_size=32, max_steps=10000, learning_rate=3e-4)
-        }
-    }
+    presets = {'tiny': {'model': ModelConfig(vocab_size=256, max_seq_len=64, n_layers=2, d_model=128, n_heads=4, n_kv_heads=2, d_ff=344), 'train': TrainConfig(batch_size=16, max_steps=500, eval_every=50, save_every=100, warmup_steps=50)}, 'default': {'model': ModelConfig(), 'train': TrainConfig()}, 'medium': {'model': ModelConfig(vocab_size=2048, max_seq_len=64, n_layers=8, d_model=512, n_heads=8, n_kv_heads=4, d_ff=1376), 'train': TrainConfig(batch_size=32, max_steps=10000, learning_rate=0.0003)}}
     if preset not in presets:
         raise ValueError(f"Unknown preset '{preset}'.")
     p = presets[preset]
-    return p['model'], p['train'], GenConfig(), TokenizerConfig(vocab_size=p['model'].vocab_size)
+    return (p['model'], p['train'], GenConfig(), TokenizerConfig(vocab_size=p['model'].vocab_size))
 
 def save_config(model_cfg: ModelConfig, path: str):
     Path(path).parent.mkdir(parents=True, exist_ok=True)
