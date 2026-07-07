@@ -7,3 +7,4 @@ __pycache__/
 data/
 checkpoints/
 tokenizer_vocab/
+ledger.json

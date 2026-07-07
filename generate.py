@@ -1,5 +1,6 @@
 import argparse
 import time
+import json
 import torch
 import torch.nn.functional as F
 from config import load_config, GenConfig
@@ -61,14 +62,13 @@ if __name__ == '__main__':
     parser.add_argument('--txn', type=str, required=True, help='Bank transaction text')
     args = parser.parse_args()
     
+    import re
+    extracted_amount = 0.0
+    matches = re.findall(r'\d+(?:\.\d{1,2})?', args.txn)
+    if matches:
+        extracted_amount = float(matches[-1])
+    
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
-    if device == 'cuda':
-        gpu_name = torch.cuda.get_device_name(0)
-        print(f"[SYSTEM] Hardware Detected: {gpu_name} (CUDA: Enabled)")
-    else:
-        print(f"[SYSTEM] Hardware Detected: CPU")
-        
-    print("[SYSTEM] Loading Model Checkpoint...")
     ckpt_dir = Path('checkpoints')
     model_cfg = load_config(str(ckpt_dir / 'model_config.json'))
     tokenizer = BPETokenizer.load('tokenizer_vocab')
@@ -90,13 +90,33 @@ if __name__ == '__main__':
     model.eval()
     
     start_time = time.perf_counter()
-    print("[INFERENCE] Generating logits...")
     cat, conf, num_toks = generate_category(model, tokenizer, args.txn, device=device)
     end_time = time.perf_counter()
     
+    ledger_path = Path('ledger.json')
+    if ledger_path.exists():
+        with open(ledger_path, 'r') as f:
+            ledger = json.load(f)
+    else:
+        ledger = {'balance': 0.0}
+        
+    cat_upper = cat.upper()
+    operator = ""
+    if extracted_amount > 0:
+        if cat_upper == 'INCOME':
+            ledger['balance'] += extracted_amount
+            operator = "+"
+        else:
+            ledger['balance'] -= extracted_amount
+            operator = "-"
+        with open(ledger_path, 'w') as f:
+            json.dump(ledger, f)
+    
     print(f"[TOKENS] [BPE Tokenizer] Encoded to {num_toks} sub-word tokens")
     print("-" * 60)
-    print(f"[OUTPUT] Category: {cat.upper()}")
+    print(f"[OUTPUT] Category: {cat_upper}")
+    if extracted_amount > 0:
+        print(f"[LEDGER] Amount extracted: {operator}${extracted_amount:.2f} | Current Balance: ${ledger['balance']:.2f}")
     
     latency = (end_time - start_time) * 1000
     speed = num_toks / (end_time - start_time)
